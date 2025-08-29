@@ -110,7 +110,7 @@ const App: React.FC = () => {
       <main className="w-full max-w-5xl mx-auto">
         <header className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight flex items-center justify-center gap-3">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-500">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-500 p-5">
               Memoji Magic AI
             </span>
             <SparklesIcon className="w-8 h-8 md:w-10 md:w-10 text-yellow-300" />
@@ -120,7 +120,10 @@ const App: React.FC = () => {
           {renderContent()}
         </div>
         <footer className="text-center mt-12 text-slate-500 text-sm">
-          <p>Powered by Google Gemini and Imagen. Created for demonstration purposes.</p>
+          <p>
+            Powered by Google Gemini and Imagen. Created for demonstration
+            purposes.
+          </p>
         </footer>
       </main>
     </div>
