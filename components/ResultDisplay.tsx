@@ -17,8 +17,10 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
 }) => {
   const handleDownloadImage = () => {
     const link = document.createElement('a');
-    link.href = `data:image/png;base64,${memojiImage}`;
-    link.download = 'memoji.png';
+    link.href = memojiImage;
+    const mimeType = memojiImage.slice(5, memojiImage.indexOf(';'));
+    const extension = mimeType === 'image/jpeg' ? 'jpg' : mimeType.split('/')[1];
+    link.download = `memoji.${extension}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -54,7 +56,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
           <h2 className="text-xl font-bold text-indigo-400 mb-4">Your Memoji</h2>
           <div className="aspect-square w-full rounded-2xl overflow-hidden shadow-lg bg-slate-800 shadow-indigo-500/20">
             <img
-              src={`data:image/png;base64,${memojiImage}`}
+              src={memojiImage}
               alt="Generated memoji"
               className="w-full h-full object-cover"
             />
