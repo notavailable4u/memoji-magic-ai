@@ -22,28 +22,35 @@ const fileToGenerativePart = async (file: File) => {
 export const generateMemojiDescription = async (imageFile: File): Promise<string> => {
     const imagePart = await fileToGenerativePart(imageFile);
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash-lite',
         contents: { parts: [
             imagePart,
             { text: "Describe the person in this image in detail, focusing on features that would be useful for creating a cartoon avatar or memoji. Describe their hair style and color, eye shape and color, face shape, glasses, facial hair, and expression. Be concise and descriptive." }
         ]},
     });
-    return response.text;
+    const text = response.text;
+    if (!text) {
+        throw new Error("No description was generated from the image.");
+    }
+    return text;
 };
 
 export const generateMemojiImage = async (description: string): Promise<string> => {
-    const prompt = `A 3D memoji style avatar of a person with ${description}. Pixar style, character portrait, colorful, clean details, centered, on a solid light gray background.`;
-    const response = await ai.models.generateImages({
-        model: 'imagen-4.0-generate-001',
-        prompt: prompt,
+    const prompt = `Generate one square (1:1) image: A 3D memoji style avatar of a person with ${description}. Pixar style, character portrait, colorful, clean details, centered, on a solid light gray background.`;
+    const response = await ai.models.generateContent({
+        model: 'gemini-3.1-flash-image',
+        contents: prompt,
         config: {
-            numberOfImages: 1,
-            outputMimeType: 'image/png',
-            aspectRatio: '1:1',
+            responseModalities: ['IMAGE'],
         },
     });
-    if (response.generatedImages && response.generatedImages.length > 0) {
-        return response.generatedImages[0].image.imageBytes;
+    for (const part of response.candidates?.[0]?.content?.parts ?? []) {
+        if (!part.thought && part.inlineData?.data && part.inlineData.mimeType?.startsWith('image/')) {
+            return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        }
+    }
+    if (response.promptFeedback?.blockReason) {
+        throw new Error(`Image generation was blocked: ${response.promptFeedback.blockReason}. Try another photo.`);
     }
     throw new Error("Image generation failed or returned no images.");
 };
@@ -51,8 +58,12 @@ export const generateMemojiImage = async (description: string): Promise<string> 
 export const generateMemojiBio = async (description: string): Promise<string> => {
     const prompt = `Based on this description of a person: "${description}", write a short, fun, and quirky one-paragraph bio for their memoji avatar. Make it sound like a character introduction in a fun animated movie.`;
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash-lite',
         contents: prompt,
     });
-    return response.text;
+    const text = response.text;
+    if (!text) {
+        throw new Error("No bio was generated.");
+    }
+    return text;
 };

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useId, useRef } from 'react';
 
 interface ImageUploaderProps {
   onImageUpload: (file: File) => void;
@@ -8,22 +8,28 @@ interface ImageUploaderProps {
 const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, disabled }) => {
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
 
-  const handleFile = (files: FileList | null) => {
-    if (files && files[0]) {
-      onImageUpload(files[0]);
+  const handleFile = useCallback((files: FileList | null) => {
+    const file = files?.[0];
+    if (!disabled && file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
+      onImageUpload(file);
     }
-  };
+  }, [disabled, onImageUpload]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (disabled) {
+      setDragActive(false);
+      return;
+    }
     if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
     } else if (e.type === "dragleave") {
       setDragActive(false);
     }
-  }, []);
+  }, [disabled]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -32,25 +38,25 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, disabled }
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFile(e.dataTransfer.files);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [handleFile]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     if (e.target.files && e.target.files[0]) {
       handleFile(e.target.files);
     }
+    e.target.value = '';
   };
 
   const onButtonClick = () => {
-    inputRef.current?.click();
+    if (!disabled) inputRef.current?.click();
   };
 
   return (
     <div className="w-full max-w-lg mx-auto text-center">
       <form
         className={`p-8 border-2 border-dashed rounded-2xl transition-colors duration-300 ${
-          dragActive ? 'border-indigo-400 bg-slate-800/80' : 'border-slate-600'
+          dragActive && !disabled ? 'border-indigo-400 bg-slate-800/80' : 'border-slate-600'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -59,6 +65,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, disabled }
         onSubmit={(e) => e.preventDefault()}
       >
         <input
+          id={inputId}
           ref={inputRef}
           type="file"
           className="hidden"
@@ -66,7 +73,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, disabled }
           onChange={handleChange}
           disabled={disabled}
         />
-        <label htmlFor="file-upload" className={`flex flex-col items-center ${disabled ? 'cursor-not-allowed': 'cursor-pointer'}`}>
+        <div className="flex flex-col items-center">
+        <label htmlFor={inputId} className={`flex flex-col items-center ${disabled ? 'cursor-not-allowed': 'cursor-pointer'}`}>
           <svg
             className="w-16 h-16 text-slate-500 mb-4"
             fill="none"
@@ -85,6 +93,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, disabled }
             <span className="font-semibold text-indigo-400">Click to upload</span> or drag and drop
           </p>
           <p className="text-xs text-slate-500">PNG or JPG</p>
+        </label>
           <button
             type="button"
             onClick={onButtonClick}
@@ -93,7 +102,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, disabled }
           >
             Select a Photo
           </button>
-        </label>
+        </div>
       </form>
     </div>
   );

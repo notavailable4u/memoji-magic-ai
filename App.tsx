@@ -121,7 +121,7 @@ const App: React.FC = () => {
         </div>
         <footer className="text-center mt-12 text-slate-500 text-sm">
           <p>
-            Powered by Google Gemini and Imagen. Created for demonstration
+            Powered by Google Gemini. Created for demonstration
             purposes.
           </p>
         </footer>
